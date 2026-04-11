@@ -7,10 +7,12 @@ from typing import TYPE_CHECKING
 
 import markdown as md
 
+from app.wiki import WIKILINK_RE
+
 if TYPE_CHECKING:
     from app.wiki import WikiStore
 
-WIKILINK_RE = re.compile(r"\[\[([^\]|]+)(?:\|([^\]]+))?\]\]")
+_MD = md.Markdown(extensions=["tables", "fenced_code", "nl2br"])
 
 
 def render_wiki_markdown(content: str, store: WikiStore) -> str:
@@ -26,9 +28,5 @@ def render_wiki_markdown(content: str, store: WikiStore) -> str:
         return f'<span class="wikilink-broken">{display}</span>'
 
     processed = WIKILINK_RE.sub(replace_wikilink, content)
-
-    html = md.markdown(
-        processed,
-        extensions=["tables", "fenced_code", "nl2br"],
-    )
-    return html
+    _MD.reset()
+    return _MD.convert(processed)

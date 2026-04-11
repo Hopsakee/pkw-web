@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -10,14 +11,16 @@ import frontmatter
 
 WIKI_FOLDERS = ("entities", "concepts", "sources", "comparisons", "syntheses")
 
-WIKILINK_RE = re.compile(r"\[\[([^\]|]+)(?:\|[^\]]+)?\]\]")
+WIKILINK_RE = re.compile(r"\[\[([^\]|]+)(?:\|([^\]]+))?\]\]")
+
+_HEADING_RE = re.compile(r"^#+\s+.*$", re.MULTILINE)
 
 TYPE_CONFIG: dict[str, dict[str, str]] = {
-    "entity":     {"icon": "\U0001F464", "color": "#3b82f6"},  # blue
-    "concept":    {"icon": "\U0001F4A1", "color": "#a855f7"},  # purple
-    "source":     {"icon": "\U0001F4C4", "color": "#22c55e"},  # green
-    "comparison": {"icon": "\u2696\ufe0f", "color": "#f97316"},  # orange
-    "synthesis":  {"icon": "\U0001F9EC", "color": "#ec4899"},  # pink
+    "entity":     {"icon": "\U0001F464", "color": "#3b82f6"},
+    "concept":    {"icon": "\U0001F4A1", "color": "#a855f7"},
+    "source":     {"icon": "\U0001F4C4", "color": "#22c55e"},
+    "comparison": {"icon": "\u2696\ufe0f", "color": "#f97316"},
+    "synthesis":  {"icon": "\U0001F9EC", "color": "#ec4899"},
 }
 
 FOLDER_TO_TYPE = {
@@ -27,6 +30,12 @@ FOLDER_TO_TYPE = {
     "comparisons": "comparison",
     "syntheses": "synthesis",
 }
+
+
+def _make_snippet(content: str, max_len: int = 200) -> str:
+    text = _HEADING_RE.sub("", content).strip()
+    text = WIKILINK_RE.sub(r"\1", text)
+    return text[:max_len] + "..." if len(text) > max_len else text
 
 
 @dataclass(slots=True)
@@ -40,30 +49,33 @@ class WikiPage:
     tags: list[str]
     sources: list[str]
     content: str
+    snippet: str = ""
     outlinks: list[str] = field(default_factory=list)
     backlinks: list[str] = field(default_factory=list)
+    _title_lower: str = ""
+    _content_lower: str = ""
 
     @property
     def url(self) -> str:
         return f"/wiki/{self.folder}/{self.slug}"
 
-    @property
-    def snippet(self) -> str:
-        text = self.content.strip()
-        text = re.sub(r"^#+\s+.*$", "", text, flags=re.MULTILINE).strip()
-        text = WIKILINK_RE.sub(r"\1", text)
-        return text[:200] + "..." if len(text) > 200 else text
-
 
 @dataclass(slots=True)
 class WikiStats:
     total_pages: int = 0
-    entities: int = 0
-    concepts: int = 0
-    sources: int = 0
-    comparisons: int = 0
-    syntheses: int = 0
+    counts: dict[str, int] = field(default_factory=dict)
     total_links: int = 0
+
+    @property
+    def entities(self) -> int: return self.counts.get("entities", 0)
+    @property
+    def concepts(self) -> int: return self.counts.get("concepts", 0)
+    @property
+    def sources(self) -> int: return self.counts.get("sources", 0)
+    @property
+    def comparisons(self) -> int: return self.counts.get("comparisons", 0)
+    @property
+    def syntheses(self) -> int: return self.counts.get("syntheses", 0)
 
 
 class WikiStore:
@@ -73,10 +85,14 @@ class WikiStore:
         self.wiki_path = wiki_path
         self.pages: dict[str, WikiPage] = {}
         self._slug_to_folder: dict[str, str] = {}
+        self._folder_pages: dict[str, list[WikiPage]] = {}
+        self._all_pages: list[WikiPage] = []
+        self._stats: WikiStats | None = None
 
     def load(self) -> None:
         self.pages.clear()
         self._slug_to_folder.clear()
+        backlink_sets: dict[str, set[str]] = {}
 
         for folder_name in WIKI_FOLDERS:
             folder = self.wiki_path / folder_name
@@ -88,8 +104,10 @@ class WikiStore:
                     key = f"{folder_name}/{page.slug}"
                     self.pages[key] = page
                     self._slug_to_folder[page.slug] = folder_name
+                    backlink_sets[key] = set()
 
-        self._compute_backlinks()
+        self._compute_backlinks(backlink_sets)
+        self._precompute_indexes()
 
     def _parse_file(self, path: Path, folder_name: str) -> WikiPage | None:
         try:
@@ -102,7 +120,7 @@ class WikiStore:
         wiki_type = FOLDER_TO_TYPE.get(folder_name, folder_name)
         content = post.content
 
-        outlinks = WIKILINK_RE.findall(content)
+        outlinks = [m[0] for m in WIKILINK_RE.findall(content)]
 
         return WikiPage(
             slug=slug,
@@ -114,51 +132,60 @@ class WikiStore:
             tags=meta.get("tags", []) or [],
             sources=meta.get("sources", []) or [],
             content=content,
+            snippet=_make_snippet(content),
             outlinks=outlinks,
+            _title_lower=meta.get("title", slug.replace("-", " ").title()).lower(),
+            _content_lower=content.lower(),
         )
 
-    def _compute_backlinks(self) -> None:
+    def _compute_backlinks(self, backlink_sets: dict[str, set[str]]) -> None:
         for page in self.pages.values():
             for link_slug in page.outlinks:
                 folder = self._slug_to_folder.get(link_slug)
                 if folder:
                     target_key = f"{folder}/{link_slug}"
-                    target = self.pages.get(target_key)
-                    if target and page.slug not in target.backlinks:
-                        target.backlinks.append(page.slug)
+                    if target_key in backlink_sets:
+                        backlink_sets[target_key].add(page.slug)
+
+        for key, slugs in backlink_sets.items():
+            if slugs:
+                self.pages[key].backlinks = sorted(slugs)
+
+    def _precompute_indexes(self) -> None:
+        self._all_pages = sorted(self.pages.values(), key=lambda p: p._title_lower)
+        for folder_name in WIKI_FOLDERS:
+            self._folder_pages[folder_name] = sorted(
+                [p for p in self.pages.values() if p.folder == folder_name],
+                key=lambda p: p._title_lower,
+            )
+        folder_counts = Counter(p.folder for p in self.pages.values())
+        total_links = sum(len(p.outlinks) for p in self.pages.values())
+        self._stats = WikiStats(
+            total_pages=len(self.pages),
+            counts=dict(folder_counts),
+            total_links=total_links,
+        )
 
     def get_page(self, folder: str, slug: str) -> WikiPage | None:
         return self.pages.get(f"{folder}/{slug}")
 
     def get_folder_pages(self, folder: str) -> list[WikiPage]:
-        return sorted(
-            [p for p in self.pages.values() if p.folder == folder],
-            key=lambda p: p.title.lower(),
-        )
+        return self._folder_pages.get(folder, [])
 
     def get_all_pages(self) -> list[WikiPage]:
-        return sorted(self.pages.values(), key=lambda p: p.title.lower())
+        return self._all_pages
 
     def get_stats(self) -> WikiStats:
-        stats = WikiStats(total_pages=len(self.pages))
-        for page in self.pages.values():
-            if page.folder == "entities": stats.entities += 1
-            elif page.folder == "concepts": stats.concepts += 1
-            elif page.folder == "sources": stats.sources += 1
-            elif page.folder == "comparisons": stats.comparisons += 1
-            elif page.folder == "syntheses": stats.syntheses += 1
-            stats.total_links += len(page.outlinks)
-        return stats
+        return self._stats or WikiStats()
 
     def search(self, query: str) -> list[WikiPage]:
         q = query.lower()
-        results = []
-        for page in self.pages.values():
-            if (q in page.title.lower()
-                or q in page.content.lower()
-                or any(q in tag.lower() for tag in page.tags)):
-                results.append(page)
-        return sorted(results, key=lambda p: p.title.lower())
+        return [
+            p for p in self._all_pages
+            if q in p._title_lower
+            or q in p._content_lower
+            or any(q in tag.lower() for tag in p.tags)
+        ]
 
     def resolve_slug(self, slug: str) -> tuple[str, str] | None:
         folder = self._slug_to_folder.get(slug)

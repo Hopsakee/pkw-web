@@ -45,4 +45,4 @@ def register(store: WikiStore, settings: Settings) -> None:
             ui.input(
                 placeholder="Search by title, content, or tags...",
                 on_change=do_search,
-            ).classes("w-full search-input").props('clearable outlined dark')
+            ).classes("w-full search-input").props('clearable outlined dark debounce="300"')

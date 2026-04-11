@@ -5,7 +5,7 @@ from nicegui import ui
 from app.components.badges import type_badge
 from app.components.layout import page_layout
 from app.config import Settings
-from app.wiki import TYPE_CONFIG, WIKI_FOLDERS, WikiStore
+from app.wiki import FOLDER_TO_TYPE, TYPE_CONFIG, WIKI_FOLDERS, WikiStore
 
 
 def register(store: WikiStore, settings: Settings) -> None:
@@ -40,9 +40,9 @@ def register(store: WikiStore, settings: Settings) -> None:
             ui.label("Browse by Type").classes("text-lg font-semibold text-slate-200 mt-4")
             with ui.row().classes("w-full gap-4 flex-wrap"):
                 for folder in WIKI_FOLDERS:
-                    wiki_type = folder.rstrip("s") if folder != "syntheses" else "synthesis"
+                    wiki_type = FOLDER_TO_TYPE[folder]
                     cfg = TYPE_CONFIG.get(wiki_type, {})
-                    count = len(store.get_folder_pages(folder))
+                    count = stats.counts.get(folder, 0)
                     with ui.link(target=f"/wiki/{folder}").classes("no-underline flex-1 min-w-[180px]"):
                         with ui.element("div").classes("wiki-card cursor-pointer"):
                             ui.label(f"{cfg.get('icon', '')} {folder.title()}").classes(
