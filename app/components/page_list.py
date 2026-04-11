@@ -1,4 +1,4 @@
-"""Shared sortable/filterable page list with tag cloud."""
+"""Shared sortable/filterable page list with collapsible tag filter."""
 
 from __future__ import annotations
 
@@ -44,40 +44,79 @@ def page_list_controls(
     *,
     show_type_badge: bool = True,
 ) -> None:
-    state = {"sort": "name", "active_tags": set()}
+    state = {"sort": "name", "active_tags": set(), "tags_expanded": False}
     available_tags = _collect_tags(pages)
-
-    tag_cloud_container = ui.element("div")
-    list_container = ui.column().classes("w-full gap-1")
 
     def toggle_tag(tag: str) -> None:
         if tag in state["active_tags"]:
             state["active_tags"].discard(tag)
         else:
             state["active_tags"].add(tag)
-        render_tag_cloud()
+        render_filter_bar()
         render_list()
-
-    def render_tag_cloud() -> None:
-        tag_cloud_container.clear()
-        with tag_cloud_container:
-            if state["active_tags"]:
-                with ui.row().classes("items-center gap-2 mb-1"):
-                    ui.label(
-                        f"Filtering: {', '.join(sorted(state['active_tags']))}"
-                    ).style("color: var(--accent); font-size: 0.8rem")
-                    ui.button(
-                        "Clear", on_click=lambda: clear_tags()
-                    ).props("flat dense size=xs").style("color: var(--text-muted)")
-            with ui.row().classes("flex-wrap gap-1"):
-                for tag in available_tags:
-                    is_active = tag in state["active_tags"]
-                    _tag_pill(tag, is_active, lambda t=tag: toggle_tag(t))
 
     def clear_tags() -> None:
         state["active_tags"].clear()
-        render_tag_cloud()
+        render_filter_bar()
         render_list()
+
+    def toggle_tags_panel() -> None:
+        state["tags_expanded"] = not state["tags_expanded"]
+        render_filter_bar()
+
+    def on_sort_change(e) -> None:
+        state["sort"] = e.value
+        render_list()
+
+    # === Controls bar: sort + filter button + active filter display ===
+    with ui.row().classes("w-full items-center gap-3 flex-wrap"):
+        ui.select(
+            options=SORT_OPTIONS,
+            value="name",
+            label="Sort by",
+            on_change=on_sort_change,
+        ).classes("w-40 sort-select").props("outlined dense")
+
+        filter_bar = ui.element("div").classes("flex-1")
+
+    # === Collapsible tag cloud (hidden by default) ===
+    tag_panel = ui.element("div")
+
+    # === Page list ===
+    list_container = ui.column().classes("w-full gap-1")
+
+    def render_filter_bar() -> None:
+        filter_bar.clear()
+        tag_panel.clear()
+
+        with filter_bar:
+            with ui.row().classes("items-center gap-2 flex-wrap"):
+                if state["active_tags"]:
+                    # Show active filters
+                    ui.label("Filtered on:").style(
+                        "color: var(--text-muted); font-size: 0.8rem"
+                    )
+                    for tag in sorted(state["active_tags"]):
+                        _tag_pill(tag, True, lambda t=tag: toggle_tag(t))
+                    ui.button(
+                        "Clear filter", on_click=clear_tags
+                    ).props("flat dense size=xs").style("color: var(--text-muted)")
+
+                btn_label = "Hide tags" if state["tags_expanded"] else "Filter by tags"
+                btn_icon = "expand_less" if state["tags_expanded"] else "filter_list"
+                ui.button(
+                    btn_label, icon=btn_icon, on_click=toggle_tags_panel
+                ).props("flat dense size=sm").style(
+                    "color: var(--accent); font-size: 0.8rem"
+                )
+
+        if state["tags_expanded"]:
+            with tag_panel:
+                with ui.element("div").classes("wiki-card").style("padding: 0.75rem"):
+                    with ui.row().classes("flex-wrap gap-1"):
+                        for tag in available_tags:
+                            is_active = tag in state["active_tags"]
+                            _tag_pill(tag, is_active, lambda t=tag: toggle_tag(t))
 
     def render_list() -> None:
         list_container.clear()
@@ -117,20 +156,6 @@ def page_list_controls(
                         "color: var(--text-muted); font-size: 0.7rem; white-space: nowrap"
                     )
 
-    def on_sort_change(e) -> None:
-        state["sort"] = e.value
-        render_list()
-
-    # Sort control
-    ui.select(
-        options=SORT_OPTIONS,
-        value="name",
-        label="Sort by",
-        on_change=on_sort_change,
-    ).classes("w-40 sort-select").props("outlined dense")
-
-    # Tag cloud
-    render_tag_cloud()
-
-    # Page list
+    # Initial render
+    render_filter_bar()
     render_list()
