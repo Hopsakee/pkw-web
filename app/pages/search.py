@@ -13,7 +13,9 @@ def register(store: WikiStore, settings: Settings) -> None:
     @ui.page("/search")
     def search_page() -> None:
         with page_layout("Search"):
-            ui.label("Search Wiki").classes("text-2xl font-bold text-slate-100")
+            ui.label("Search Wiki").style(
+                "color: var(--text-primary); font-size: 1.5rem; font-weight: 700"
+            )
 
             results_container = ui.column().classes("w-full gap-2")
 
@@ -25,9 +27,11 @@ def register(store: WikiStore, settings: Settings) -> None:
                 results = store.search(query)
                 with results_container:
                     if not results:
-                        ui.label("No results found.").classes("text-slate-500")
+                        ui.label("No results found.").style("color: var(--text-muted)")
                         return
-                    ui.label(f"{len(results)} results").classes("text-slate-400 text-sm")
+                    ui.label(f"{len(results)} results").style(
+                        "color: var(--text-muted); font-size: 0.875rem"
+                    )
                     for page in results:
                         with ui.link(target=page.url).classes("no-underline w-full"):
                             with ui.element("div").classes(
@@ -35,11 +39,11 @@ def register(store: WikiStore, settings: Settings) -> None:
                             ):
                                 type_badge(page.type)
                                 with ui.column().classes("flex-1 gap-1"):
-                                    ui.label(page.title).classes(
-                                        "text-slate-200 font-medium text-sm"
+                                    ui.label(page.title).style(
+                                        "color: var(--text-primary); font-size: 0.875rem; font-weight: 500"
                                     )
-                                    ui.label(page.snippet[:150]).classes(
-                                        "text-slate-500 text-xs"
+                                    ui.label(page.snippet[:150]).style(
+                                        "color: var(--text-muted); font-size: 0.75rem"
                                     )
 
             ui.input(

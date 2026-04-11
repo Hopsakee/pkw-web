@@ -87,6 +87,7 @@ class WikiStore:
         self._slug_to_folder: dict[str, str] = {}
         self._folder_pages: dict[str, list[WikiPage]] = {}
         self._all_pages: list[WikiPage] = []
+        self._all_tags: list[str] = []
         self._stats: WikiStats | None = None
 
     def load(self) -> None:
@@ -129,7 +130,7 @@ class WikiStore:
             type=meta.get("type", wiki_type),
             created=str(meta.get("created", "")),
             updated=str(meta.get("updated", "")),
-            tags=meta.get("tags", []) or [],
+            tags=[str(t) for t in (meta.get("tags", []) or [])],
             sources=meta.get("sources", []) or [],
             content=content,
             snippet=_make_snippet(content),
@@ -165,6 +166,10 @@ class WikiStore:
             counts=dict(folder_counts),
             total_links=total_links,
         )
+        tag_set: set[str] = set()
+        for p in self.pages.values():
+            tag_set.update(str(t) for t in p.tags)
+        self._all_tags = sorted(tag_set)
 
     def get_page(self, folder: str, slug: str) -> WikiPage | None:
         return self.pages.get(f"{folder}/{slug}")
@@ -177,6 +182,9 @@ class WikiStore:
 
     def get_stats(self) -> WikiStats:
         return self._stats or WikiStats()
+
+    def get_all_tags(self) -> list[str]:
+        return self._all_tags
 
     def search(self, query: str) -> list[WikiPage]:
         q = query.lower()
