@@ -22,6 +22,7 @@ def main() -> None:
         reload=False,
         show=False,
         dark=settings.dark_mode,
+        storage_secret="pkw-web-storage-secret",
     )
 
 

@@ -1,6 +1,8 @@
-"""Shared sortable/filterable page list component."""
+"""Shared sortable/filterable page list with tag cloud."""
 
 from __future__ import annotations
+
+from html import escape
 
 from nicegui import ui
 
@@ -22,82 +24,113 @@ SORT_KEYS = {
 }
 
 
+def _collect_tags(pages: list[WikiPage]) -> list[str]:
+    tags: set[str] = set()
+    for p in pages:
+        tags.update(p.tags)
+    return sorted(tags)
+
+
+def _tag_pill(tag: str, active: bool, on_click) -> None:
+    cls = "tag-pill tag-pill-active" if active else "tag-pill"
+    ui.html(
+        f'<span class="{cls}">{escape(tag)}</span>'
+    ).on("click", on_click).style("cursor: pointer")
+
+
 def page_list_controls(
     pages: list[WikiPage],
     store: WikiStore,
     *,
     show_type_badge: bool = True,
 ) -> None:
-    """Render a page list with sort and tag filter controls."""
-    sort_value = {"current": "name"}
-    tag_value = {"current": ""}
+    state = {"sort": "name", "active_tags": set()}
+    available_tags = _collect_tags(pages)
 
-    list_container = ui.column().classes("w-full gap-2")
+    tag_cloud_container = ui.element("div")
+    list_container = ui.column().classes("w-full gap-1")
+
+    def toggle_tag(tag: str) -> None:
+        if tag in state["active_tags"]:
+            state["active_tags"].discard(tag)
+        else:
+            state["active_tags"].add(tag)
+        render_tag_cloud()
+        render_list()
+
+    def render_tag_cloud() -> None:
+        tag_cloud_container.clear()
+        with tag_cloud_container:
+            if state["active_tags"]:
+                with ui.row().classes("items-center gap-2 mb-1"):
+                    ui.label(
+                        f"Filtering: {', '.join(sorted(state['active_tags']))}"
+                    ).style("color: var(--accent); font-size: 0.8rem")
+                    ui.button(
+                        "Clear", on_click=lambda: clear_tags()
+                    ).props("flat dense size=xs").style("color: var(--text-muted)")
+            with ui.row().classes("flex-wrap gap-1"):
+                for tag in available_tags:
+                    is_active = tag in state["active_tags"]
+                    _tag_pill(tag, is_active, lambda t=tag: toggle_tag(t))
+
+    def clear_tags() -> None:
+        state["active_tags"].clear()
+        render_tag_cloud()
+        render_list()
 
     def render_list() -> None:
         list_container.clear()
         filtered = pages
-        if tag_value["current"]:
-            filtered = [p for p in filtered if tag_value["current"] in p.tags]
+        if state["active_tags"]:
+            filtered = [
+                p for p in filtered
+                if state["active_tags"].issubset(set(p.tags))
+            ]
 
-        key_fn = SORT_KEYS.get(sort_value["current"], SORT_KEYS["name"])
+        key_fn = SORT_KEYS.get(state["sort"], SORT_KEYS["name"])
         sorted_pages = sorted(filtered, key=key_fn)
 
         with list_container:
-            if not sorted_pages:
-                ui.label("No pages match the selected filter.").style(
-                    "color: var(--text-muted)"
-                )
-                return
             ui.label(f"{len(sorted_pages)} pages").style(
-                "color: var(--text-muted); font-size: 0.875rem"
+                "color: var(--text-muted); font-size: 0.8rem"
             )
             for page in sorted_pages:
-                with ui.link(target=page.url).classes("no-underline w-full"):
-                    with ui.row().classes(
-                        "w-full items-center gap-3 px-4 py-2 rounded-lg theme-hover"
-                    ).style("transition: background-color 0.15s"):
-                        if show_type_badge:
-                            type_badge(page.type)
-                        ui.label(page.title).style(
-                            "color: var(--text-primary); font-size: 0.875rem"
-                        )
-                        ui.space()
-                        if page.tags:
-                            for tag in page.tags[:2]:
-                                ui.badge(tag).classes(
-                                    "text-xs"
-                                ).style(
-                                    "background-color: var(--bg-secondary); "
-                                    "color: var(--text-secondary); "
-                                    "border: 1px solid var(--border)"
+                with ui.row().classes(
+                    "w-full items-center gap-3 px-4 py-2 rounded-lg"
+                ).style("transition: background-color 0.15s"):
+                    if show_type_badge:
+                        type_badge(page.type)
+                    ui.link(page.title, page.url).classes("no-underline").style(
+                        "color: var(--text-primary); font-size: 0.875rem; flex: 1"
+                    )
+                    if page.tags:
+                        with ui.row().classes("gap-1 flex-wrap"):
+                            for tag in page.tags[:4]:
+                                is_active = tag in state["active_tags"]
+                                _tag_pill(
+                                    tag, is_active, lambda t=tag: toggle_tag(t)
                                 )
-                        ui.label(
-                            f"{len(page.backlinks)}in {len(page.outlinks)}out"
-                        ).style("color: var(--text-muted); font-size: 0.75rem")
+                    ui.label(
+                        f"{len(page.backlinks)}in {len(page.outlinks)}out"
+                    ).style(
+                        "color: var(--text-muted); font-size: 0.7rem; white-space: nowrap"
+                    )
 
     def on_sort_change(e) -> None:
-        sort_value["current"] = e.value
+        state["sort"] = e.value
         render_list()
 
-    def on_tag_change(e) -> None:
-        tag_value["current"] = e.value or ""
-        render_list()
+    # Sort control
+    ui.select(
+        options=SORT_OPTIONS,
+        value="name",
+        label="Sort by",
+        on_change=on_sort_change,
+    ).classes("w-40 sort-select").props("outlined dense")
 
-    with ui.row().classes("w-full items-center gap-4 flex-wrap"):
-        ui.select(
-            options=SORT_OPTIONS,
-            value="name",
-            label="Sort by",
-            on_change=on_sort_change,
-        ).classes("w-40").props("outlined dense dark")
+    # Tag cloud
+    render_tag_cloud()
 
-        all_tags = store.get_all_tags()
-        ui.select(
-            options=[""] + all_tags,
-            value="",
-            label="Filter by tag",
-            on_change=on_tag_change,
-        ).classes("w-48").props("outlined dense dark clearable")
-
+    # Page list
     render_list()

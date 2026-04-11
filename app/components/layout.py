@@ -20,7 +20,14 @@ APP_CSS = """
     --border: #334155;
     --hover-bg: rgba(148, 163, 184, 0.08);
     --header-bg: #0f172a;
-    --badge-text: #ffffff;
+    --badge-bg: rgba(255, 255, 255, 0.12);
+    --badge-text: #e2e8f0;
+    --badge-border: rgba(255, 255, 255, 0.15);
+    --tag-bg: #1e293b;
+    --tag-text: #94a3b8;
+    --tag-border: #334155;
+    --tag-active-bg: #0284c7;
+    --tag-active-text: #ffffff;
 }
 
 body.body--light {
@@ -35,7 +42,14 @@ body.body--light {
     --border: #e2e8f0;
     --hover-bg: rgba(15, 23, 42, 0.04);
     --header-bg: #ffffff;
-    --badge-text: #ffffff;
+    --badge-bg: rgba(0, 0, 0, 0.06);
+    --badge-text: #334155;
+    --badge-border: rgba(0, 0, 0, 0.1);
+    --tag-bg: #f1f5f9;
+    --tag-text: #475569;
+    --tag-border: #e2e8f0;
+    --tag-active-bg: #0284c7;
+    --tag-active-text: #ffffff;
 }
 
 body {
@@ -57,14 +71,6 @@ body {
 .wiki-card:hover {
     border-color: var(--accent);
     transform: translateY(-2px);
-}
-
-.stat-card {
-    background-color: var(--bg-secondary);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 1rem 1.25rem;
-    text-align: center;
 }
 
 /* Wiki content typography */
@@ -103,14 +109,14 @@ body {
     border-radius: 0 8px 8px 0;
 }
 .wiki-content code {
-    background-color: var(--bg-primary);
+    background-color: var(--bg-secondary);
     padding: 0.15rem 0.4rem;
     border-radius: 4px;
     font-size: 0.875em;
     color: var(--accent);
 }
 .wiki-content pre {
-    background-color: var(--bg-primary);
+    background-color: var(--bg-secondary);
     padding: 1rem;
     border-radius: 8px;
     overflow-x: auto;
@@ -123,7 +129,7 @@ body {
     padding: 0.5rem 0.75rem;
     text-align: left;
 }
-.wiki-content th { background-color: var(--bg-primary); font-weight: 600; }
+.wiki-content th { background-color: var(--bg-secondary); font-weight: 600; }
 .wiki-content hr { border: none; border-top: 1px solid var(--border); margin: 1.5rem 0; }
 
 .wiki-content a.wikilink {
@@ -156,14 +162,43 @@ body {
     color: var(--text-primary) !important;
 }
 
-/* Theme-aware utility classes */
-.theme-text { color: var(--text-primary); }
-.theme-text-secondary { color: var(--text-secondary); }
-.theme-text-muted { color: var(--text-muted); }
-.theme-bg { background-color: var(--bg-primary); }
-.theme-bg-card { background-color: var(--bg-card); }
-.theme-border { border-color: var(--border); }
-.theme-hover:hover { background-color: var(--hover-bg); }
+/* Tag cloud */
+.tag-pill {
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.15s;
+    background-color: var(--tag-bg);
+    color: var(--tag-text);
+    border: 1px solid var(--tag-border);
+}
+.tag-pill:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+.tag-pill-active {
+    background-color: var(--tag-active-bg) !important;
+    color: var(--tag-active-text) !important;
+    border-color: var(--tag-active-bg) !important;
+}
+
+/* Sort select styling */
+.sort-select .q-field__control {
+    background-color: var(--bg-secondary) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 8px !important;
+    color: var(--text-primary) !important;
+    min-height: 36px !important;
+}
+.sort-select .q-field__label {
+    color: var(--text-muted) !important;
+}
+.sort-select .q-field__native,
+.sort-select .q-field__input {
+    color: var(--text-primary) !important;
+}
 
 /* Header theming */
 .pkw-header {
@@ -201,10 +236,18 @@ def header() -> None:
                     folder.title(), f"/wiki/{folder}"
                 ).classes("no-underline text-sm").style("color: var(--text-muted)")
 
-            dark = ui.dark_mode()
+            # Dark mode toggle — persisted via app.storage.user
+            is_dark = app.storage.user.get("dark_mode", True)
+            dark = ui.dark_mode(value=is_dark)
+
+            def toggle_dark() -> None:
+                dark.toggle()
+                app.storage.user["dark_mode"] = dark.value
+
+            icon = "light_mode" if is_dark else "dark_mode"
             ui.button(
-                icon="dark_mode",
-                on_click=lambda: dark.toggle(),
+                icon=icon,
+                on_click=toggle_dark,
             ).props("flat round size=sm").style("color: var(--text-secondary)")
 
 
