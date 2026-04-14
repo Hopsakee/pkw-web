@@ -14,7 +14,7 @@ def register(store: WikiStore, settings: Settings) -> None:
     def folder_page(folder: str) -> None:
         if folder not in WIKI_FOLDERS:
             with page_layout("Not Found"):
-                ui.label(f"Unknown folder: {folder}").style("color: #ef4444")
+                ui.label(f"Unknown folder: {folder}").style("color: var(--error)")
             return
 
         pages = store.get_folder_pages(folder)
@@ -26,9 +26,8 @@ def register(store: WikiStore, settings: Settings) -> None:
                 ui.label(f"{cfg.get('icon', '')} {folder.title()}").style(
                     "color: var(--text-primary); font-size: 1.5rem; font-weight: 700"
                 )
-                ui.badge(f"{len(pages)} pages").style(
-                    f"background-color: {cfg.get('color', '#6b7280')}; "
-                    "color: #ffffff; font-weight: 500"
+                ui.label(f"{len(pages)} pages").style(
+                    "color: var(--text-muted); font-size: 0.875rem"
                 )
 
             page_list_controls(pages, store, show_type_badge=False)

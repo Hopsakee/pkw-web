@@ -3,10 +3,11 @@ services:
     image: pkw-web
     container_name: pkw-web
     restart: unless-stopped
-    build: /home/ubuntu/apps/pkw-web
+    build: .
     environment:
       - WIKI_PATH=/app/data/wiki
       - APP_PORT=8080
+      - STORAGE_SECRET=${STORAGE_SECRET}
     networks:
       - hup
     volumes:

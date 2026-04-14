@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from html import escape
 from typing import TYPE_CHECKING
 
 import markdown as md
@@ -24,8 +25,8 @@ def render_wiki_markdown(content: str, store: WikiStore) -> str:
         resolved = store.resolve_slug(slug)
         if resolved:
             folder, s = resolved
-            return f'<a href="/wiki/{folder}/{s}" class="wikilink">{display}</a>'
-        return f'<span class="wikilink-broken">{display}</span>'
+            return f'<a href="/wiki/{folder}/{escape(s)}" class="wikilink">{escape(display)}</a>'
+        return f'<span class="wikilink-broken">{escape(display)}</span>'
 
     processed = WIKILINK_RE.sub(replace_wikilink, content)
     _MD.reset()

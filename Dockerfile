@@ -4,5 +4,7 @@ COPY pyproject.toml uv.lock .
 RUN --mount=type=cache,target=/root/.cache uv sync --no-install-project
 COPY . .
 RUN --mount=type=cache,target=/root/.cache uv sync
+RUN adduser --disabled-password --no-create-home appuser
+USER appuser
 EXPOSE 8080
 CMD ["uv", "run", "main.py"]

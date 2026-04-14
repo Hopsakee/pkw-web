@@ -44,7 +44,7 @@ def register(store: WikiStore, settings: Settings) -> None:
 
         if not page:
             with page_layout("Not Found"):
-                ui.label(f"Page not found: {folder}/{slug}").style("color: #ef4444")
+                ui.label(f"Page not found: {folder}/{slug}").style("color: var(--error)")
             return
 
         with page_layout(page.title):

@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+import logging
 import re
 from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 import frontmatter
 
@@ -54,6 +57,7 @@ class WikiPage:
     backlinks: list[str] = field(default_factory=list)
     _title_lower: str = ""
     _content_lower: str = ""
+    _tags_lower: list[str] = field(default_factory=list)
 
     @property
     def url(self) -> str:
@@ -65,17 +69,6 @@ class WikiStats:
     total_pages: int = 0
     counts: dict[str, int] = field(default_factory=dict)
     total_links: int = 0
-
-    @property
-    def entities(self) -> int: return self.counts.get("entities", 0)
-    @property
-    def concepts(self) -> int: return self.counts.get("concepts", 0)
-    @property
-    def sources(self) -> int: return self.counts.get("sources", 0)
-    @property
-    def comparisons(self) -> int: return self.counts.get("comparisons", 0)
-    @property
-    def syntheses(self) -> int: return self.counts.get("syntheses", 0)
 
 
 class WikiStore:
@@ -113,7 +106,8 @@ class WikiStore:
     def _parse_file(self, path: Path, folder_name: str) -> WikiPage | None:
         try:
             post = frontmatter.load(str(path))
-        except Exception:
+        except Exception as e:
+            logger.warning("Failed to parse %s: %s", path, e)
             return None
 
         slug = path.stem
@@ -130,13 +124,14 @@ class WikiStore:
             type=meta.get("type", wiki_type),
             created=str(meta.get("created", "")),
             updated=str(meta.get("updated", "")),
-            tags=[str(t) for t in (meta.get("tags", []) or [])],
+            tags=(tags := [str(t) for t in (meta.get("tags", []) or [])]),
             sources=meta.get("sources", []) or [],
             content=content,
             snippet=_make_snippet(content),
             outlinks=outlinks,
             _title_lower=meta.get("title", slug.replace("-", " ").title()).lower(),
             _content_lower=content.lower(),
+            _tags_lower=[t.lower() for t in tags],
         )
 
     def _compute_backlinks(self, backlink_sets: dict[str, set[str]]) -> None:
@@ -192,7 +187,7 @@ class WikiStore:
             p for p in self._all_pages
             if q in p._title_lower
             or q in p._content_lower
-            or any(q in tag.lower() for tag in p.tags)
+            or any(q in t for t in p._tags_lower)
         ]
 
     def resolve_slug(self, slug: str) -> tuple[str, str] | None:

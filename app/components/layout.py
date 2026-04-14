@@ -31,6 +31,7 @@ APP_CSS = """
     --tag-border: #1a4570;
     --tag-active-bg: #075895;
     --tag-active-text: #ffffff;
+    --error: #f87171;
 }
 
 body.body--light {
@@ -56,6 +57,7 @@ body.body--light {
     --tag-border: #075895;
     --tag-active-bg: #c87600;
     --tag-active-text: #ffffff;
+    --error: #dc2626;
 }
 
 body {
