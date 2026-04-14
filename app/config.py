@@ -19,6 +19,7 @@ class Settings:
     host: str
     port: int
     dark_mode: bool
+    storage_secret: str
 
     @property
     def wiki_exists(self) -> bool:
@@ -33,4 +34,5 @@ def load_settings() -> Settings:
         host=os.getenv("APP_HOST", "0.0.0.0"),
         port=int(os.getenv("APP_PORT", "8081")),
         dark_mode=env_flag("DARK_MODE", default=True),
+        storage_secret=os.getenv("STORAGE_SECRET", "pkw-web-storage-secret"),
     )

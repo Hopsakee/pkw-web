@@ -1,5 +1,9 @@
-075895ff
-00b0eaff
-f29100ff
-93c01fff
-d74116ff
+# WDODelta Brand Palette
+
+| Hex       | Name          |
+|-----------|---------------|
+| #075895   | WDODelta Blue |
+| #00b0ea   | Light Blue    |
+| #f29100   | Orange        |
+| #93c01f   | Green         |
+| #d74116   | Red           |

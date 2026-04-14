@@ -8,32 +8,7 @@ from typing import Generator
 from nicegui import app, ui
 
 APP_CSS = """
-:root, body.body--light {
-    --bg-primary: #ffffff;
-    --bg-secondary: #f5f5f5;
-    --bg-card: #075895;
-    --card-text: #ffffff;
-    --card-text-muted: rgba(255, 255, 255, 0.7);
-    --text-primary: #333333;
-    --text-secondary: #6f6f6f;
-    --text-muted: #999999;
-    --accent: #075895;
-    --accent-hover: #f29100;
-    --accent-orange-light: #fff4e0;
-    --border: #075895;
-    --hover-bg: rgba(7, 88, 149, 0.06);
-    --header-bg: #ffffff;
-    --badge-bg: rgba(7, 88, 149, 0.08);
-    --badge-text: #075895;
-    --badge-border: rgba(7, 88, 149, 0.15);
-    --tag-bg: #e8f0f7;
-    --tag-text: #075895;
-    --tag-border: #075895;
-    --tag-active-bg: #f29100;
-    --tag-active-text: #ffffff;
-}
-
-body.body--dark {
+:root, body.body--dark {
     --bg-primary: #0a2540;
     --bg-secondary: #0e3358;
     --bg-card: #0e3358;
@@ -55,6 +30,31 @@ body.body--dark {
     --tag-text: #a0b4c8;
     --tag-border: #1a4570;
     --tag-active-bg: #075895;
+    --tag-active-text: #ffffff;
+}
+
+body.body--light {
+    --bg-primary: #ffffff;
+    --bg-secondary: #f5f5f5;
+    --bg-card: #075895;
+    --card-text: #ffffff;
+    --card-text-muted: rgba(255, 255, 255, 0.7);
+    --text-primary: #333333;
+    --text-secondary: #6f6f6f;
+    --text-muted: #767676;
+    --accent: #075895;
+    --accent-hover: #f29100;
+    --accent-orange-light: #fff4e0;
+    --border: rgba(7, 88, 149, 0.18);
+    --hover-bg: rgba(7, 88, 149, 0.06);
+    --header-bg: #ffffff;
+    --badge-bg: rgba(7, 88, 149, 0.08);
+    --badge-text: #075895;
+    --badge-border: rgba(7, 88, 149, 0.15);
+    --tag-bg: #e8f0f7;
+    --tag-text: #075895;
+    --tag-border: #075895;
+    --tag-active-bg: #c87600;
     --tag-active-text: #ffffff;
 }
 
@@ -227,6 +227,32 @@ body {
     object-fit: contain !important;
     object-position: left center !important;
 }
+
+/* Type badges */
+.type-badge {
+    display: inline-block;
+    padding: 0.15rem 0.5rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    white-space: nowrap;
+    background-color: #374151;
+    color: #d1d5db;
+}
+body.body--light .type-badge {
+    background-color: #f3f4f6;
+    color: #374151;
+}
+body.body--dark .type-badge-entity { background-color: #0a3a60; color: #7dc8f5; }
+body.body--light .type-badge-entity { background-color: #e3f0fa; color: #075895; }
+body.body--dark .type-badge-concept { background-color: #0b4a6e; color: #6dd4f5; }
+body.body--light .type-badge-concept { background-color: #ddf3fc; color: #007bb8; }
+body.body--dark .type-badge-source { background-color: #2a4a0a; color: #c2e06a; }
+body.body--light .type-badge-source { background-color: #eef6d8; color: #5a7a0d; }
+body.body--dark .type-badge-comparison { background-color: #5a3500; color: #f5be5a; }
+body.body--light .type-badge-comparison { background-color: #fef0d5; color: #b07000; }
+body.body--dark .type-badge-synthesis { background-color: #5a1a0a; color: #f58a6a; }
+body.body--light .type-badge-synthesis { background-color: #fde8e2; color: #d74116; }
 """
 
 
@@ -259,15 +285,16 @@ def header() -> None:
             is_dark = app.storage.user.get("dark_mode", True)
             dark = ui.dark_mode(value=is_dark)
 
+            dark_btn = ui.button(
+                icon="light_mode" if is_dark else "dark_mode",
+            ).props("flat round size=sm").style("color: var(--text-secondary)")
+
             def toggle_dark() -> None:
                 dark.toggle()
                 app.storage.user["dark_mode"] = dark.value
+                dark_btn.props(f'icon={"light_mode" if dark.value else "dark_mode"}')
 
-            icon = "light_mode" if is_dark else "dark_mode"
-            ui.button(
-                icon=icon,
-                on_click=toggle_dark,
-            ).props("flat round size=sm").style("color: var(--text-secondary)")
+            dark_btn.on("click", toggle_dark)
 
 
 @contextmanager
