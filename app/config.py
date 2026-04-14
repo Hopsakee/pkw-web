@@ -28,9 +28,9 @@ class Settings:
 def load_settings() -> Settings:
     load_dotenv()
     return Settings(
-        wiki_path=Path(os.getenv("WIKI_PATH", "~/Drive/PKW/wiki")).expanduser(),
+        wiki_path=Path(os.getenv("WIKI_PATH", "~/Drive/wiki_beleid/wiki")).expanduser(),
         title=os.getenv("APP_TITLE", "PKW — Personal Knowledge Wiki"),
         host=os.getenv("APP_HOST", "0.0.0.0"),
-        port=int(os.getenv("APP_PORT", "8080")),
+        port=int(os.getenv("APP_PORT", "8081")),
         dark_mode=env_flag("DARK_MODE", default=True),
     )
