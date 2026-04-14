@@ -5,6 +5,7 @@ from nicegui import ui
 from app.components.badges import type_badge
 from app.components.layout import page_layout
 from app.components.markdown import render_wiki_markdown
+from app.components.page_list import tag_pill
 from app.config import Settings
 from app.wiki import WikiStore
 
@@ -29,7 +30,7 @@ def _sidebar_section(
         return
     with ui.element("div").classes("wiki-card"):
         ui.label(f"{label} ({len(slugs)})").style(
-            "color: var(--text-secondary); font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem"
+            "color: var(--card-text-muted); font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem"
         )
         for slug in slugs:
             _sidebar_link(store, slug, show_broken=show_broken)
@@ -64,11 +65,7 @@ def register(store: WikiStore, settings: Settings) -> None:
                     )
                 if page.tags:
                     for tag in page.tags:
-                        ui.badge(tag).classes("text-xs").style(
-                            "background-color: var(--bg-secondary); "
-                            "color: var(--text-secondary); "
-                            "border: 1px solid var(--border)"
-                        )
+                        tag_pill(tag)
 
             with ui.row().classes("w-full gap-6 items-start"):
                 with ui.column().classes("flex-1 min-w-0"):

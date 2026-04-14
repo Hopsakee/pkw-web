@@ -8,54 +8,60 @@ from typing import Generator
 from nicegui import app, ui
 
 APP_CSS = """
-:root, body.body--dark {
-    --bg-primary: #0f172a;
-    --bg-secondary: #1e293b;
-    --bg-card: #1e293b;
-    --text-primary: #f1f5f9;
-    --text-secondary: #94a3b8;
-    --text-muted: #64748b;
-    --accent: #38bdf8;
-    --accent-hover: #7dd3fc;
-    --border: #334155;
-    --hover-bg: rgba(148, 163, 184, 0.08);
-    --header-bg: #0f172a;
-    --badge-bg: rgba(255, 255, 255, 0.12);
-    --badge-text: #e2e8f0;
-    --badge-border: rgba(255, 255, 255, 0.15);
-    --tag-bg: #1e293b;
-    --tag-text: #94a3b8;
-    --tag-border: #334155;
-    --tag-active-bg: #0284c7;
+:root, body.body--light {
+    --bg-primary: #ffffff;
+    --bg-secondary: #f5f5f5;
+    --bg-card: #075895;
+    --card-text: #ffffff;
+    --card-text-muted: rgba(255, 255, 255, 0.7);
+    --text-primary: #333333;
+    --text-secondary: #6f6f6f;
+    --text-muted: #999999;
+    --accent: #075895;
+    --accent-hover: #f29100;
+    --accent-orange-light: #fff4e0;
+    --border: #075895;
+    --hover-bg: rgba(7, 88, 149, 0.06);
+    --header-bg: #ffffff;
+    --badge-bg: rgba(7, 88, 149, 0.08);
+    --badge-text: #075895;
+    --badge-border: rgba(7, 88, 149, 0.15);
+    --tag-bg: #e8f0f7;
+    --tag-text: #075895;
+    --tag-border: #075895;
+    --tag-active-bg: #f29100;
     --tag-active-text: #ffffff;
 }
 
-body.body--light {
-    --bg-primary: #f8fafc;
-    --bg-secondary: #ffffff;
-    --bg-card: #ffffff;
-    --text-primary: #0f172a;
-    --text-secondary: #475569;
-    --text-muted: #94a3b8;
-    --accent: #0284c7;
-    --accent-hover: #0369a1;
-    --border: #e2e8f0;
-    --hover-bg: rgba(15, 23, 42, 0.04);
-    --header-bg: #ffffff;
-    --badge-bg: rgba(0, 0, 0, 0.06);
-    --badge-text: #334155;
-    --badge-border: rgba(0, 0, 0, 0.1);
-    --tag-bg: #f1f5f9;
-    --tag-text: #475569;
-    --tag-border: #e2e8f0;
-    --tag-active-bg: #0284c7;
+body.body--dark {
+    --bg-primary: #0a2540;
+    --bg-secondary: #0e3358;
+    --bg-card: #0e3358;
+    --card-text: #e8edf2;
+    --card-text-muted: #6b8aaa;
+    --text-primary: #e8edf2;
+    --text-secondary: #a0b4c8;
+    --text-muted: #6b8aaa;
+    --accent: #00b0ea;
+    --accent-hover: #f29100;
+    --accent-orange-light: #1a1400;
+    --border: #1a4570;
+    --hover-bg: rgba(0, 176, 234, 0.08);
+    --header-bg: #0a2540;
+    --badge-bg: rgba(0, 176, 234, 0.12);
+    --badge-text: #a0d8ef;
+    --badge-border: rgba(0, 176, 234, 0.2);
+    --tag-bg: #0e3358;
+    --tag-text: #a0b4c8;
+    --tag-border: #1a4570;
+    --tag-active-bg: #075895;
     --tag-active-text: #ffffff;
 }
 
 body {
     background-color: var(--bg-primary) !important;
     color: var(--text-primary) !important;
-    font-family: 'Inter', 'system-ui', sans-serif;
+    font-family: Arial, Helvetica, sans-serif;
 }
 
 .q-page { background-color: var(--bg-primary) !important; }
@@ -63,20 +69,27 @@ body {
 
 .wiki-card {
     background-color: var(--bg-card);
+    color: var(--card-text);
     border: 1px solid var(--border);
     border-radius: 12px;
     padding: 1.25rem;
     transition: border-color 0.2s, transform 0.15s;
 }
 .wiki-card:hover {
-    border-color: var(--accent);
+    border-color: var(--accent-hover);
     transform: translateY(-2px);
 }
 
-/* Wiki content typography */
-.wiki-content h1 { font-size: 1.75rem; font-weight: 700; margin: 1.5rem 0 0.75rem; color: var(--text-primary); }
-.wiki-content h2 { font-size: 1.35rem; font-weight: 600; margin: 1.25rem 0 0.5rem; color: var(--text-primary); }
-.wiki-content h3 { font-size: 1.1rem; font-weight: 600; margin: 1rem 0 0.5rem; color: var(--text-primary); }
+.filter-panel {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+}
+
+/* Wiki content typography — headings use WDODelta accent blue */
+.wiki-content h1 { font-size: 1.75rem; font-weight: 700; margin: 1.5rem 0 0.75rem; color: var(--accent); }
+.wiki-content h2 { font-size: 1.35rem; font-weight: 600; margin: 1.25rem 0 0.5rem; color: var(--accent); }
+.wiki-content h3 { font-size: 1.1rem; font-weight: 600; margin: 1rem 0 0.5rem; color: var(--accent); }
 .wiki-content p { margin: 0.5rem 0; line-height: 1.7; color: var(--text-secondary); }
 
 /* Lists — explicit bullet/number styles */
@@ -105,7 +118,7 @@ body {
     padding: 0.5rem 1rem;
     margin: 0.75rem 0;
     color: var(--text-secondary);
-    background-color: rgba(56, 189, 248, 0.05);
+    background-color: var(--accent-orange-light);
     border-radius: 0 8px 8px 0;
 }
 .wiki-content code {
@@ -148,12 +161,12 @@ body {
 .wiki-content a:hover { color: var(--accent-hover); text-decoration: underline; }
 
 .sidebar-link {
-    color: var(--accent);
+    color: var(--card-text) !important;
     cursor: pointer;
     font-size: 0.875rem;
-    transition: color 0.2s;
+    transition: opacity 0.2s;
 }
-.sidebar-link:hover { color: var(--accent-hover); }
+.sidebar-link:hover { opacity: 0.8; }
 
 .search-input .q-field__control {
     background-color: var(--bg-secondary) !important;
@@ -203,38 +216,44 @@ body {
 /* Header theming */
 .pkw-header {
     background-color: var(--header-bg) !important;
-    border-bottom: 1px solid var(--border) !important;
+    border-bottom: none !important;
+    box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.10) !important;
+}
+.pkw-header-logo {
+    height: 40px;
+    width: 160px;
+}
+.pkw-header-logo .q-img__image {
+    object-fit: contain !important;
+    object-position: left center !important;
 }
 """
 
 
+LOGO_URL = "/static/data/wdod_logo_uw_cmyk_pc_friendly_1.svg"
+
+
 def add_head_html() -> None:
     ui.add_head_html(f"<style>{APP_CSS}</style>")
-    ui.add_head_html(
-        '<link rel="preconnect" href="https://fonts.googleapis.com">'
-        '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
-        '<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">'
-    )
 
 
 def header() -> None:
     with ui.header().classes("pkw-header"):
         with ui.row().classes("w-full items-center px-6 py-2"):
-            ui.link("PKW", "/").classes(
-                "text-xl font-bold no-underline"
-            ).style("color: var(--accent)")
+            with ui.link(target="/").classes("no-underline"):
+                ui.image(LOGO_URL).classes("pkw-header-logo")
             ui.space()
             for label, href in [
                 ("Home", "/"),
                 ("Search", "/search"),
             ]:
                 ui.link(label, href).classes(
-                    "no-underline text-sm"
-                ).style("color: var(--text-secondary)")
+                    "no-underline text-sm font-medium"
+                ).style("color: var(--accent)")
             for folder in ("entities", "concepts", "sources", "comparisons", "syntheses"):
                 ui.link(
                     folder.title(), f"/wiki/{folder}"
-                ).classes("no-underline text-sm").style("color: var(--text-muted)")
+                ).classes("no-underline text-sm").style("color: var(--text-secondary)")
 
             # Dark mode toggle — persisted via app.storage.user
             is_dark = app.storage.user.get("dark_mode", True)

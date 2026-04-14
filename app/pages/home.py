@@ -31,10 +31,10 @@ def register(store: WikiStore, settings: Settings) -> None:
                     with ui.link(target=f"/wiki/{folder}").classes("no-underline flex-1 min-w-[180px]"):
                         with ui.element("div").classes("wiki-card cursor-pointer"):
                             ui.label(f"{cfg.get('icon', '')} {folder.title()}").style(
-                                "color: var(--text-primary); font-size: 1rem; font-weight: 600"
+                                "color: var(--card-text); font-size: 1rem; font-weight: 600"
                             )
                             ui.label(f"{count} pages").style(
-                                "color: var(--text-muted); font-size: 0.875rem; margin-top: 0.25rem"
+                                "color: var(--card-text-muted); font-size: 0.875rem; margin-top: 0.25rem"
                             )
 
             # All pages with sort + filter

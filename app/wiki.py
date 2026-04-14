@@ -16,11 +16,11 @@ WIKILINK_RE = re.compile(r"\[\[([^\]|]+)(?:\|([^\]]+))?\]\]")
 _HEADING_RE = re.compile(r"^#+\s+.*$", re.MULTILINE)
 
 TYPE_CONFIG: dict[str, dict[str, str]] = {
-    "entity":     {"icon": "\U0001F464", "color": "#3b82f6"},
-    "concept":    {"icon": "\U0001F4A1", "color": "#a855f7"},
-    "source":     {"icon": "\U0001F4C4", "color": "#22c55e"},
-    "comparison": {"icon": "\u2696\ufe0f", "color": "#f97316"},
-    "synthesis":  {"icon": "\U0001F9EC", "color": "#ec4899"},
+    "entity":     {"icon": "\U0001F464", "color": "#075895"},
+    "concept":    {"icon": "\U0001F4A1", "color": "#00b0ea"},
+    "source":     {"icon": "\U0001F4C4", "color": "#93c01f"},
+    "comparison": {"icon": "\u2696\ufe0f", "color": "#f29100"},
+    "synthesis":  {"icon": "\U0001F9EC", "color": "#d74116"},
 }
 
 FOLDER_TO_TYPE = {

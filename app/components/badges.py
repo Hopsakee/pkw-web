@@ -4,27 +4,28 @@ from nicegui import ui
 
 from app.wiki import TYPE_CONFIG
 
-# Type colors that work in both dark and light mode
+# Type colors derived from WDODelta palette:
+# #075895 (blue), #00b0ea (light blue), #f29100 (orange), #93c01f (green), #d74116 (red)
 _TYPE_COLORS: dict[str, dict[str, str]] = {
     "entity": {
-        "dark_bg": "#1e3a5f", "dark_text": "#93c5fd",
-        "light_bg": "#dbeafe", "light_text": "#1e40af",
+        "dark_bg": "#0a3a60", "dark_text": "#7dc8f5",
+        "light_bg": "#e3f0fa", "light_text": "#075895",
     },
     "concept": {
-        "dark_bg": "#3b1f6e", "dark_text": "#c4b5fd",
-        "light_bg": "#ede9fe", "light_text": "#5b21b6",
+        "dark_bg": "#0b4a6e", "dark_text": "#6dd4f5",
+        "light_bg": "#ddf3fc", "light_text": "#007bb8",
     },
     "source": {
-        "dark_bg": "#14412a", "dark_text": "#86efac",
-        "light_bg": "#dcfce7", "light_text": "#166534",
+        "dark_bg": "#2a4a0a", "dark_text": "#c2e06a",
+        "light_bg": "#eef6d8", "light_text": "#5a7a0d",
     },
     "comparison": {
-        "dark_bg": "#4a2410", "dark_text": "#fdba74",
-        "light_bg": "#ffedd5", "light_text": "#9a3412",
+        "dark_bg": "#5a3500", "dark_text": "#f5be5a",
+        "light_bg": "#fef0d5", "light_text": "#b07000",
     },
     "synthesis": {
-        "dark_bg": "#4a1942", "dark_text": "#f9a8d4",
-        "light_bg": "#fce7f3", "light_text": "#9d174d",
+        "dark_bg": "#5a1a0a", "dark_text": "#f58a6a",
+        "light_bg": "#fde8e2", "light_text": "#d74116",
     },
 }
 

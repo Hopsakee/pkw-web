@@ -31,11 +31,12 @@ def _collect_tags(pages: list[WikiPage]) -> list[str]:
     return sorted(tags)
 
 
-def _tag_pill(tag: str, active: bool, on_click) -> None:
+def tag_pill(tag: str, active: bool = False, on_click=None) -> None:
+    """Render a tag pill. Shared across all pages for consistent styling."""
     cls = "tag-pill tag-pill-active" if active else "tag-pill"
-    ui.html(
-        f'<span class="{cls}">{escape(tag)}</span>'
-    ).on("click", on_click).style("cursor: pointer")
+    el = ui.html(f'<span class="{cls}">{escape(tag)}</span>')
+    if on_click:
+        el.on("click", on_click).style("cursor: pointer")
 
 
 def page_list_controls(
@@ -97,7 +98,7 @@ def page_list_controls(
                         "color: var(--text-muted); font-size: 0.8rem"
                     )
                     for tag in sorted(state["active_tags"]):
-                        _tag_pill(tag, True, lambda t=tag: toggle_tag(t))
+                        tag_pill(tag, True, lambda t=tag: toggle_tag(t))
                     ui.button(
                         "Clear filter", on_click=clear_tags
                     ).props("flat dense size=xs").style("color: var(--text-muted)")
@@ -112,11 +113,11 @@ def page_list_controls(
 
         if state["tags_expanded"]:
             with tag_panel:
-                with ui.element("div").classes("wiki-card").style("padding: 0.75rem"):
+                with ui.element("div").classes("filter-panel").style("padding: 0.75rem"):
                     with ui.row().classes("flex-wrap gap-1"):
                         for tag in available_tags:
                             is_active = tag in state["active_tags"]
-                            _tag_pill(tag, is_active, lambda t=tag: toggle_tag(t))
+                            tag_pill(tag, is_active, lambda t=tag: toggle_tag(t))
 
     def render_list() -> None:
         list_container.clear()
@@ -147,7 +148,7 @@ def page_list_controls(
                         with ui.row().classes("gap-1 flex-wrap"):
                             for tag in page.tags[:4]:
                                 is_active = tag in state["active_tags"]
-                                _tag_pill(
+                                tag_pill(
                                     tag, is_active, lambda t=tag: toggle_tag(t)
                                 )
                     ui.label(

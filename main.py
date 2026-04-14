@@ -1,7 +1,11 @@
+from pathlib import Path
+
 from app.config import load_settings
 from app.pages import folder, home, page, search
 from app.wiki import WikiStore
-from nicegui import ui
+from nicegui import app, ui
+
+DATA_DIR = Path(__file__).resolve().parent / "data"
 
 
 def main() -> None:
@@ -9,6 +13,8 @@ def main() -> None:
 
     store = WikiStore(settings.wiki_path)
     store.load()
+
+    app.add_static_files("/static/data", str(DATA_DIR))
 
     home.register(store, settings)
     folder.register(store, settings)
