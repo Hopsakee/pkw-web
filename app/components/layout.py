@@ -225,6 +225,27 @@ body {
     height: 40px;
     width: 160px;
 }
+
+/* Help pill — visually separated from function-page links */
+.header-help-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.25rem 0.65rem;
+    margin-left: 0.5rem;
+    border-radius: 9999px;
+    border: 1px solid var(--border);
+    color: var(--text-muted) !important;
+    background-color: transparent;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    transition: border-color 0.15s, color 0.15s, background-color 0.15s;
+}
+.header-help-pill:hover {
+    color: var(--accent-hover) !important;
+    border-color: var(--accent-hover);
+    background-color: var(--accent-orange-light);
+}
 .pkw-header-logo .q-img__image {
     object-fit: contain !important;
     object-position: left center !important;
@@ -282,6 +303,11 @@ def header() -> None:
                 ui.link(
                     folder.title(), f"/wiki/{folder}"
                 ).classes("no-underline text-sm").style("color: var(--text-secondary)")
+
+            # Help pill — distinct from function pages (muted outline, icon-led)
+            ui.link("? Help", "/help").classes(
+                "no-underline text-xs header-help-pill"
+            )
 
             # Dark mode toggle — persisted via app.storage.user
             is_dark = app.storage.user.get("dark_mode", True)

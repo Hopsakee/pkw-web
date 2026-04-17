@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from app.config import load_settings
-from app.pages import folder, home, page, search
+from app.pages import folder, help, home, page, search
 from app.wiki import WikiStore
 from nicegui import app, ui
 
@@ -20,6 +20,7 @@ def main() -> None:
     folder.register(store, settings)
     page.register(store, settings)
     search.register(store, settings)
+    help.register(store, settings)
 
     ui.run(
         title=settings.title,
