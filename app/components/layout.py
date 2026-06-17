@@ -295,6 +295,7 @@ def header() -> None:
             for label, href in [
                 ("Home", "/"),
                 ("Search", "/search"),
+                ("Graph", "/graph"),
             ]:
                 ui.link(label, href).classes(
                     "no-underline text-sm font-medium"

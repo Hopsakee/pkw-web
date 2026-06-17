@@ -8,6 +8,8 @@ dependencies = [
     "python-frontmatter>=1.1.0",
     "markdown>=3.7",
     "python-dotenv>=1.0.1",
+    "networkx>=3.6.1",
+    "numpy>=2.4.6",
 ]
 
 [dependency-groups]
