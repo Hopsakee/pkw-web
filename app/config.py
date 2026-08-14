@@ -29,7 +29,7 @@ class Settings:
 def load_settings() -> Settings:
     load_dotenv()
     return Settings(
-        wiki_path=Path(os.getenv("WIKI_PATH", "~/Drive/wiki_beleid/wiki")).expanduser(),
+        wiki_path=Path(os.getenv("WIKI_PATH", "~/Obsidian/wiki_beleid/Wiki-beleid")).expanduser(),
         title=os.getenv("APP_TITLE", "PKW — Personal Knowledge Wiki"),
         host=os.getenv("APP_HOST", "0.0.0.0"),
         port=int(os.getenv("APP_PORT", "8081")),
