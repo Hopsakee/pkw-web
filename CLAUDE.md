@@ -52,7 +52,54 @@ Cards (`wiki-card`) use `--bg-card` as background (blue in light mode). Use `--c
 
 ## Deployment
 
-Runs on a Hetzner VM behind Caddy (reverse proxy) + Authelia (auth). Wiki data is mounted read-only from a Hetzner volume. Config files live at `~/hopsakee-server/config/pkw-web/`. Deploy via `deploy.sh`.
+Runs on a Hetzner VM behind Caddy (reverse proxy). Public at
+`datalab-knowledge.hopsakee.top`, routed with **no Authelia gate** —
+deliberately public/read-only (F13 decision, 2026-07-03). Wiki data is
+mounted read-only from a Hetzner volume. Config files live at
+`~/hopsakee-server/config/pkw-web/`. Deploy via `deploy.sh`.
+
+## Refresh Contract — rsync new wiki content, then restart
+
+`WikiStore.load()` runs ONCE at process startup. New files arriving in the
+bind-mount source are visible from inside the container but the in-memory
+`store.pages` dict is frozen at boot. After every meaningful rsync the
+container has to be restarted:
+
+```bash
+# Both sides reference wiki/ explicitly — symmetric trailing slashes:
+rsync -avh --delete -e 'ssh -i ~/.ssh/sledge_wsl' \
+  ~/Drive/wiki_beleid/wiki/ \
+  ubuntu@hopsakee.top:/mnt/HC_Volume_105122334/pkw-wiki/wiki/
+
+ssh -i ~/.ssh/sledge_wsl ubuntu@hopsakee.top 'docker restart pkw-web'
+```
+
+A `/_reload` endpoint avoids the container restart:
+
+```bash
+curl -fsS -X POST -H "X-Reload-Token: $RELOAD_TOKEN" \
+  https://datalab-knowledge.hopsakee.top/_reload
+```
+
+The handler rebuilds the wiki store into a fresh `WikiStore`, then atomically
+swaps the in-memory state on the live store. On `load()` failure the previous
+state is left untouched and the endpoint returns 500. Success returns JSON
+with `status`, `pages`, `delta`, `elapsed_ms`, and `loaded_at`.
+
+**Operator note:** `RELOAD_TOKEN` (or `RELOAD_TOKEN_FILE`, Authelia-style)
+MUST be set in the deployed env (the `pkw-web` compose `environment:` block
+on the Hetzner VM — not yet added there as of this port). When unset the
+endpoint returns 503 on every call. Tokens shorter than 16 chars trigger a
+startup warning. The token is read at startup and stripped of surrounding
+whitespace; `X-Reload-Token` header is compared via `hmac.compare_digest`.
+A repeat call within `RELOAD_MIN_INTERVAL_S` (default 30s) gets 429.
+
+**Security note — this domain has NO Authelia gate.** Unlike hopswiki-web,
+`datalab-knowledge.hopsakee.top` is routed in Caddy with no
+`authelia_forward_auth` import. That means the `RELOAD_TOKEN` check in the
+handler is the *only* access control on this endpoint, not a second layer
+behind a cookie gate. Use a long, random token and treat it with the same
+care as any internet-facing secret.
 
 ## Vibecoded
 
