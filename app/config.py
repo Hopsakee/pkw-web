@@ -32,7 +32,7 @@ def load_settings() -> Settings:
         wiki_path=Path(os.getenv("WIKI_PATH", "~/Drive/wiki_beleid/wiki")).expanduser(),
         title=os.getenv("APP_TITLE", "PKW — Personal Knowledge Wiki"),
         host=os.getenv("APP_HOST", "0.0.0.0"),
-        port=int(os.getenv("APP_PORT", "8081")),
+        port=int(os.getenv("APP_PORT", "8080")),
         dark_mode=env_flag("DARK_MODE", default=True),
         storage_secret=os.getenv("STORAGE_SECRET", "pkw-web-storage-secret"),
     )
