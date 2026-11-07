@@ -28,11 +28,17 @@ class Settings:
 
 def load_settings() -> Settings:
     load_dotenv()
+    storage_secret = os.getenv("STORAGE_SECRET")
+    if not storage_secret:
+        raise RuntimeError(
+            "STORAGE_SECRET environment variable is not set; "
+            "set it to a long random value before starting the app."
+        )
     return Settings(
         wiki_path=Path(os.getenv("WIKI_PATH", "~/Drive/wiki_beleid/wiki")).expanduser(),
         title=os.getenv("APP_TITLE", "PKW — Personal Knowledge Wiki"),
         host=os.getenv("APP_HOST", "0.0.0.0"),
         port=int(os.getenv("APP_PORT", "8080")),
         dark_mode=env_flag("DARK_MODE", default=True),
-        storage_secret=os.getenv("STORAGE_SECRET", "pkw-web-storage-secret"),
+        storage_secret=storage_secret,
     )

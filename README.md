@@ -45,6 +45,7 @@ All settings are configurable via environment variables or a `.env` file:
 | `APP_HOST` | `0.0.0.0` | Bind address |
 | `APP_PORT` | `8080` | Server port |
 | `DARK_MODE` | `true` | Start in dark mode (`true`, `1`, `yes`, `on`) |
+| `STORAGE_SECRET` | *(required)* | Secret used to sign session storage; the app refuses to start if unset |
 
 ## Wiki Format
 
